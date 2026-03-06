@@ -82,6 +82,20 @@
         type = "app";
         program = "${self.packages.${system}.mock-greetd}/bin/mock-greetd";
       };
+      install = {
+        type = "app";
+        program = "${let
+          pkgs = nixpkgsFor system;
+        in pkgs.writeShellScriptBin "yolo-install" ''
+          echo "Building greeter..."
+          GREETER_BIN="${self.packages.${system}.default}/bin/yolo-greeter"
+          CONWAY_SCRIPT="${./conway_layer_bg.py}"
+          SETUP_SCRIPT="${./setup-greeter.sh}"
+          
+          echo "Applying setup (requires sudo)..."
+          sudo YOLO_BIN_SRC="$GREETER_BIN" CONWAY_BG_SRC="$CONWAY_SCRIPT" bash "$SETUP_SCRIPT"
+        ''}/bin/yolo-install";
+      };
     });
 
     devShells = forAllSystems (system:

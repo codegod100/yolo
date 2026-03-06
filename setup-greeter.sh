@@ -3,6 +3,10 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Allow overriding source paths (useful for Nix)
+YOLO_BIN_SRC="${YOLO_BIN_SRC:-${REPO_DIR}/build/yolo-greeter}"
+CONWAY_BG_SRC="${CONWAY_BG_SRC:-${REPO_DIR}/conway_layer_bg.py}"
+
 KVANTUM_THEME="${KVANTUM_THEME:-catppuccin-mocha-mauve}"
 DISABLE_LOCKOUT="${DISABLE_LOCKOUT:-1}"
 DISABLE_OTHER_DM="${DISABLE_OTHER_DM:-1}"
@@ -12,20 +16,19 @@ if [[ "${EUID}" -ne 0 ]]; then
   exit 1
 fi
 
-require_file() {
-  local path="$1"
-  if [[ ! -f "${path}" ]]; then
-    echo "Missing required file: ${path}"
-    exit 1
-  fi
-}
+if [[ ! -f "${YOLO_BIN_SRC}" ]]; then
+  echo "Error: yolo-greeter binary not found at ${YOLO_BIN_SRC}"
+  exit 1
+fi
 
-require_file "${REPO_DIR}/login_screen.py"
-require_file "${REPO_DIR}/conway_layer_bg.py"
+if [[ ! -f "${CONWAY_BG_SRC}" ]]; then
+  echo "Error: conway_layer_bg.py not found at ${CONWAY_BG_SRC}"
+  exit 1
+fi
 
 echo "[1/8] Installing greeter scripts..."
-install -m 755 "${REPO_DIR}/login_screen.py" /usr/local/bin/yolo-login-screen
-install -m 755 "${REPO_DIR}/conway_layer_bg.py" /usr/local/bin/yolo-conway-bg
+install -m 755 "${YOLO_BIN_SRC}" /usr/local/bin/yolo-greeter
+install -m 755 "${CONWAY_BG_SRC}" /usr/local/bin/yolo-conway-bg
 
 echo "[2/8] Preparing greeter config/state dirs..."
 install -d -m 700 -o greeter -g greeter /var/lib/greetd
@@ -49,12 +52,16 @@ layout {
     }
 }
 
+window-rule {
+    geometry-fixed-size width=800 height=600
+}
+
 hotkey-overlay {
     skip-at-startup
 }
 
 spawn-sh-at-startup "sleep 0.4; HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config GDK_BACKEND=wayland LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so /usr/bin/python3 /usr/local/bin/yolo-conway-bg >>/var/lib/greetd/yolo-conway-bg.log 2>&1"
-spawn-sh-at-startup "HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config QT_STYLE_OVERRIDE=kvantum QT_QPA_PLATFORM=wayland /usr/bin/python3 /usr/local/bin/yolo-login-screen; /usr/bin/pkill -TERM -x niri"
+spawn-sh-at-startup "HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config QT_QPA_PLATFORM=wayland /usr/local/bin/yolo-greeter; /usr/bin/pkill -TERM -x niri"
 EOF
 
 if command -v niri >/dev/null 2>&1; then
