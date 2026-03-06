@@ -53,7 +53,10 @@ layout {
 }
 
 window-rule {
-    geometry-fixed-size width=800 height=600
+    match app-id="yolo-greeter"
+    default-column-width { fixed 800; }
+    default-window-height { fixed 600; }
+    open-floating true
 }
 
 hotkey-overlay {
