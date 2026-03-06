@@ -1,0 +1,25 @@
+# Build directories
+build/
+cmake-build-*/
+
+# IDE
+.idea/
+.vscode/
+*.kdev4
+.kdev4/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Qt
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*.qm
+
+# Nix
+result
+result-*
+.direnv/

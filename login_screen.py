@@ -14,6 +14,7 @@ if "QT_LOGGING_RULES" not in os.environ:
     os.environ["QT_LOGGING_RULES"] = "qt.qpa.wayland.textinput.warning=false"
 
 from PyQt6.QtCore import Qt, QTimer, QSettings
+from PyQt6.QtGui import QKeySequence, QShortcut
 from PyQt6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -53,7 +54,7 @@ class LoginScreen(QWidget):
     
     def init_ui(self):
         """Initialize the user interface."""
-        self.setWindowTitle("Login")
+        self.setWindowTitle(" ")
         self.setFixedSize(400, 400)
         
         layout = QVBoxLayout(self)
@@ -107,6 +108,14 @@ class LoginScreen(QWidget):
         layout.addStretch()
         
         self.password_input.setFocus()
+        self.setup_shortcuts()
+
+    def setup_shortcuts(self) -> None:
+        """Register global shortcuts for the greeter window."""
+        reboot_shortcut = QShortcut(QKeySequence("Ctrl+Alt+Delete"), self)
+        reboot_shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        reboot_shortcut.activated.connect(self.reboot_system)
+        self.reboot_shortcut = reboot_shortcut
 
     @staticmethod
     def load_login_users() -> list[str]:
@@ -388,6 +397,23 @@ class LoginScreen(QWidget):
         if reply_type == "error":
             raise_error(reply)
         raise GreetdProtocolError(f"unexpected response type: {reply_type!r}")
+
+    def reboot_system(self) -> None:
+        """Reboot machine from greeter using logind/polkit."""
+        self.status_label.setText("Rebooting...")
+        QApplication.processEvents()
+
+        commands = (
+            ["/usr/bin/loginctl", "reboot"],
+            ["/usr/bin/systemctl", "reboot"],
+        )
+        for cmd in commands:
+            try:
+                subprocess.Popen(cmd)
+                return
+            except Exception:
+                continue
+        QMessageBox.critical(self, "Reboot failed", "Could not run reboot command.")
 
 
 def main():

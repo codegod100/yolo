@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=YOLO Greeter
+Comment=Kirigami-based greetd login manager
+Exec=@CMAKE_INSTALL_FULL_BINDIR@/yolo-greeter
+Type=Application
+DesktopNames=YOLO
+Categories=System;
