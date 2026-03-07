@@ -23,11 +23,6 @@ A lightweight greetd login manager written in Zig with GTK4.
 
 ### Nix / NixOS
 
-**Quick run:**
-```bash
-nix run github:codegod100/yolo
-```
-
 **One-shot install:**
 ```bash
 nix run github:codegod100/yolo#install
