@@ -1,5 +1,5 @@
 {
-  description = "YOLO Greeter - A Kirigami-based greetd login manager";
+  description = "YOLO Greeter - A lightweight Zig + GTK4 greetd login manager";
 
   nixConfig = {
     extra-substituters = [ "https://cache.garnix.io" ];
@@ -21,54 +21,36 @@
       config.allowUnfree = true;
     };
 
-    mkDerivation = pkgs:
-      pkgs.kdePackages.callPackage ({
-        mkKdeDerivation,
-        qtbase,
-        qtdeclarative,
-        qtwayland,
-        qtsvg,
-        kirigami,
-        kirigami-addons,
-        breeze-icons,
-        qqc2-desktop-style,
-        breeze,
-      }:
-      mkKdeDerivation {
+    mkZigDerivation = pkgs:
+      pkgs.stdenv.mkDerivation {
         pname = "yolo-greeter";
-        version = "1.0.0";
-        src = self;
+        version = "1.1.0";
+        src = ./yolo-zig;
         
-        extraBuildInputs = [
-          qtbase
-          qtdeclarative
-          qtwayland
-          qtsvg
-          kirigami
-          kirigami-addons
-          breeze-icons
-          qqc2-desktop-style
-          breeze
+        nativeBuildInputs = with pkgs; [
+          zig.hook
+          pkg-config
         ];
-        
-        extraCmakeFlags = [
-          "-DCMAKE_BUILD_TYPE=Release"
+
+        buildInputs = with pkgs; [
+          gtk4
+          gtk4-layer-shell
         ];
         
         meta = {
-          description = "Kirigami-based greetd login manager";
-          homepage = "https://github.com/yolo/yolo-greeter";
+          description = "Lightweight GTK4-based greetd login manager written in Zig";
+          homepage = "https://github.com/codegod100/yolo";
           license = lib.licenses.mit;
           platforms = lib.platforms.linux;
-          mainProgram = "yolo-greeter";
+          mainProgram = "yolo-zig";
         };
-      }) {};
+      };
   in {
     packages = forAllSystems (system: 
       let
         pkgs = nixpkgsFor system;
       in {
-        default = mkDerivation pkgs;
+        default = mkZigDerivation pkgs;
         mock-greetd = pkgs.writeShellScriptBin "mock-greetd" ''
           exec ${pkgs.python3}/bin/python3 ${./mock_greetd.py} "$@"
         '';
@@ -78,7 +60,7 @@
     apps = forAllSystems (system: {
       default = {
         type = "app";
-        program = "${self.packages.${system}.default}/bin/yolo-greeter";
+        program = "${self.packages.${system}.default}/bin/yolo-zig";
       };
       mock-greetd = {
         type = "app";
@@ -89,8 +71,8 @@
         program = "${let
           pkgs = nixpkgsFor system;
         in pkgs.writeShellScriptBin "yolo-install" ''
-          echo "Building greeter..."
-          GREETER_BIN="${self.packages.${system}.default}/bin/yolo-greeter"
+          echo "Building Zig greeter..."
+          GREETER_BIN="${self.packages.${system}.default}/bin/yolo-zig"
           CONWAY_SCRIPT="${./conway_layer_bg.py}"
           SETUP_SCRIPT="${./setup-greeter.sh}"
           
@@ -108,20 +90,18 @@
           inputsFrom = [ self.packages.${system}.default ];
           
           packages = with pkgs; [
-            cmake
-            extra-cmake-modules
-            clang-tools
             greetd
             gtk4
             gtk4-layer-shell
             pkg-config
             zig
             just
+            python3
           ];
           
           shellHook = ''
-            echo "YOLO Greeter development environment"
-            echo "Build with: cmake -B build && cmake --build build"
+            echo "YOLO Zig Greeter development environment"
+            echo "Use 'just' to see available commands."
           '';
         };
       }
@@ -132,7 +112,7 @@
         cfg = config.services.displayManager.yoloGreeter;
       in {
         options.services.displayManager.yoloGreeter = {
-          enable = lib.mkEnableOption "YOLO Greeter, a Kirigami-based greetd login manager";
+          enable = lib.mkEnableOption "YOLO Greeter, a lightweight Zig + GTK4 greetd login manager";
           
           package = lib.mkOption {
             type = lib.types.package;
@@ -146,7 +126,7 @@
             enable = true;
             settings = {
               default_session = {
-                command = "${cfg.package}/bin/yolo-greeter";
+                command = "${cfg.package}/bin/yolo-zig";
                 user = "greeter";
               };
             };

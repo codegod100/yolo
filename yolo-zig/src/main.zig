@@ -95,6 +95,7 @@ fn run_auth_thread(state: *AppState) void {
         } else if (std.mem.eql(u8, resp.type, "error")) {
             const err_msg = resp.description orelse "Auth failed";
             set_ui_status(state, std.fmt.allocPrintSentinel(state.allocator, "Error: {s}", .{err_msg}, 0) catch "Auth Error", true);
+            state.client.cancelSession() catch {};
             break;
         }
     }

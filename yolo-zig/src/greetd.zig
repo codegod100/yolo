@@ -96,4 +96,10 @@ pub const GreetdClient = struct {
             .env = [_][]const u8{},
         });
     }
+
+    pub fn cancelSession(self: *GreetdClient) !void {
+        try self.send(.{
+            .type = "cancel_session",
+        });
+    }
 };
