@@ -10,7 +10,7 @@ Kirigami.ApplicationWindow {
     title: "YOLO Greeter"
     width: 800
     height: 600
-    // Removed visibility: Window.FullScreen and FramelessWindowHint
+    // Removed visibility: Window.FullScreen and FramelessWindowHint to allow floating over background
     
     Kirigami.Theme.colorSet: Kirigami.Theme.View
     Kirigami.Theme.inherit: false

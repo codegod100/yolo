@@ -4,22 +4,27 @@ This guide documents the full setup for the custom login frontend in this repo:
 
 - `greetd` as display manager
 - `niri` as greeter compositor
-- `login_screen.py` as Qt login UI
-- `conway_layer_bg.py` as animated background layer
-- Kvantum theme for the login UI
+- `yolo-greeter` as Kirigami-based C++ login UI
+- `yolo-conway-bg` as animated background layer
+- Breeze theme for the login UI
 
 ## Quick Setup Script
 
-If you want to apply the whole stack in one shot:
+If you want to apply the whole stack in one shot (after building the project):
 
 ```bash
+# 1) Build the C++ project first
+cmake -B build
+cmake --build build
+
+# 2) Run setup
 sudo ./setup-greeter.sh
 ```
 
 Optional environment toggles:
 
 ```bash
-sudo KVANTUM_THEME=catppuccin-mocha-mauve DISABLE_LOCKOUT=1 DISABLE_OTHER_DM=1 ./setup-greeter.sh
+sudo DISABLE_LOCKOUT=1 DISABLE_OTHER_DM=1 ./setup-greeter.sh
 ```
 
 ## 1) Install Dependencies
@@ -29,16 +34,18 @@ On Arch/CachyOS:
 ```bash
 sudo pacman -S --needed \
   greetd niri seatd \
-  python python-pyqt6 python-gobject python-cairo \
-  gtk4 gtk4-layer-shell kvantum qt6ct
+  qt6-base qt6-declarative qt6-svg \
+  kirigami kirigami-addons \
+  python python-gobject python-cairo \
+  gtk4 gtk4-layer-shell breeze-icons
 ```
 
 ## 2) Install Frontend Scripts
 
-From this repo root:
+From this repo root (after building):
 
 ```bash
-sudo install -m 755 ./login_screen.py /usr/local/bin/yolo-login-screen
+sudo install -m 755 ./build/yolo-greeter /usr/local/bin/yolo-greeter
 sudo install -m 755 ./conway_layer_bg.py /usr/local/bin/yolo-conway-bg
 ```
 
@@ -47,23 +54,9 @@ sudo install -m 755 ./conway_layer_bg.py /usr/local/bin/yolo-conway-bg
 ```bash
 sudo install -d -m 700 -o greeter -g greeter /var/lib/greetd
 sudo install -d -m 700 -o greeter -g greeter /var/lib/greetd/.config
-sudo install -d -m 700 -o greeter -g greeter /var/lib/greetd/.config/Kvantum
 ```
 
-## 4) Kvantum Theme for Greeter UI
-
-Pick your theme name (example below uses `catppuccin-mocha-mauve`):
-
-```bash
-sudo tee /var/lib/greetd/.config/Kvantum/kvantum.kvconfig >/dev/null <<'EOF'
-[General]
-theme=catppuccin-mocha-mauve
-EOF
-sudo chown greeter:greeter /var/lib/greetd/.config/Kvantum/kvantum.kvconfig
-sudo chmod 600 /var/lib/greetd/.config/Kvantum/kvantum.kvconfig
-```
-
-## 5) niri Greeter Config (with Conway Background)
+## 4) niri Greeter Config (with Conway Background)
 
 Create `/etc/greetd/niri-greeter.kdl`:
 
@@ -75,12 +68,16 @@ layout {
     }
 }
 
+window-rule {
+    geometry-fixed-size width=800 height=600
+}
+
 hotkey-overlay {
     skip-at-startup
 }
 
 spawn-sh-at-startup "sleep 0.4; HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config GDK_BACKEND=wayland LD_PRELOAD=/usr/lib/libgtk4-layer-shell.so /usr/bin/python3 /usr/local/bin/yolo-conway-bg >>/var/lib/greetd/yolo-conway-bg.log 2>&1"
-spawn-sh-at-startup "HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config QT_STYLE_OVERRIDE=kvantum QT_QPA_PLATFORM=wayland /usr/bin/python3 /usr/local/bin/yolo-login-screen; /usr/bin/pkill -TERM -x niri"
+spawn-sh-at-startup "HOME=/var/lib/greetd XDG_CONFIG_HOME=/var/lib/greetd/.config QT_QPA_PLATFORM=wayland /usr/local/bin/yolo-greeter; /usr/bin/pkill -TERM -x niri"
 ```
 
 Validate it:
@@ -89,7 +86,7 @@ Validate it:
 niri validate -c /etc/greetd/niri-greeter.kdl
 ```
 
-## 6) greetd Config
+## 5) greetd Config
 
 Set `/etc/greetd/config.toml`:
 
@@ -102,14 +99,14 @@ command = "niri --session --config /etc/greetd/niri-greeter.kdl"
 user = "greeter"
 ```
 
-## 7) seatd Access (important)
+## 6) seatd Access (important)
 
 ```bash
 sudo usermod -aG seat greeter
 sudo systemctl enable --now seatd
 ```
 
-## 8) Make greetd Default Display Manager
+## 7) Make greetd Default Display Manager
 
 If another DM is enabled:
 
@@ -120,7 +117,7 @@ sudo systemctl enable --now greetd.service
 
 `display-manager.service` should point to `greetd.service`.
 
-## 9) Optional: Disable PAM Lockout for greetd Only
+## 8) Optional: Disable PAM Lockout for greetd Only
 
 If you do not want login lockouts in this greeter flow:
 
@@ -143,7 +140,7 @@ session    include      system-local-login
 EOF
 ```
 
-## 10) Restart and Verify
+## 9) Restart and Verify
 
 ```bash
 sudo systemctl restart greetd
@@ -161,8 +158,6 @@ systemctl status seatd --no-pager
 
 ## Runtime Files
 
-- Session picker persistence:
-  - `/var/lib/greetd/yolo-login-screen.ini`
 - Conway background logs:
   - `/var/lib/greetd/yolo-conway-bg.log`
 

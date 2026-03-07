@@ -160,7 +160,7 @@ def main() -> int:
             with conn:
                 try:
                     handle_client(conn, accepted_password)
-                except RuntimeError as exc:
+                except (RuntimeError, BrokenPipeError, ConnectionResetError) as exc:
                     print(f"Client disconnected: {exc}")
     except KeyboardInterrupt:
         print("\nShutting down mock greetd.")

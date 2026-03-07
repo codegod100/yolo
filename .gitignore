@@ -23,3 +23,7 @@ qrc_*.cpp
 result
 result-*
 .direnv/
+
+# Zig
+yolo-zig/.zig-cache/
+yolo-zig/zig-out/

@@ -32,6 +32,7 @@
         kirigami-addons,
         breeze-icons,
         qqc2-desktop-style,
+        breeze,
       }:
       mkKdeDerivation {
         pname = "yolo-greeter";
@@ -47,6 +48,7 @@
           kirigami-addons
           breeze-icons
           qqc2-desktop-style
+          breeze
         ];
         
         extraCmakeFlags = [
@@ -110,6 +112,11 @@
             extra-cmake-modules
             clang-tools
             greetd
+            gtk4
+            gtk4-layer-shell
+            pkg-config
+            zig
+            just
           ];
           
           shellHook = ''
