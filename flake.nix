@@ -21,6 +21,9 @@
       config.allowUnfree = true;
     };
 
+    # Default GTK theme
+    defaultTheme = "catppuccin-mocha-mauve-standard+default";
+
     mkZigDerivation = pkgs:
       pkgs.stdenv.mkDerivation {
         pname = "yolo-greeter";
@@ -75,9 +78,11 @@
           GREETER_BIN="${self.packages.${system}.default}/bin/yolo-zig"
           CONWAY_SCRIPT="${./conway_layer_bg.py}"
           SETUP_SCRIPT="${./setup-greeter.sh}"
+          GTK_THEME="${defaultTheme}"
           
+          echo "Theme: $GTK_THEME"
           echo "Applying setup (requires sudo)..."
-          sudo YOLO_BIN_SRC="$GREETER_BIN" CONWAY_BG_SRC="$CONWAY_SCRIPT" bash "$SETUP_SCRIPT"
+          sudo YOLO_BIN_SRC="$GREETER_BIN" CONWAY_BG_SRC="$CONWAY_SCRIPT" GTK_THEME="$GTK_THEME" bash "$SETUP_SCRIPT"
         ''}/bin/yolo-install";
       };
     });
@@ -118,6 +123,13 @@
             type = lib.types.package;
             default = self.packages.${pkgs.system}.default;
             description = "The yolo-greeter package to use.";
+          };
+
+          theme = lib.mkOption {
+            type = lib.types.str;
+            default = defaultTheme;
+            example = "catppuccin-mocha-blue-standard+default";
+            description = "GTK theme for the greeter.";
           };
         };
         

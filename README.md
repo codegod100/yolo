@@ -45,7 +45,7 @@ nix run github:codegod100/yolo#install
         {
           services.displayManager.yoloGreeter = {
             enable = true;
-            # package = yolo.packages.${pkgs.system}.default;
+            theme = "catppuccin-mocha-blue-standard+default";  # optional, mauve is default
           };
         }
       ];
